@@ -22,6 +22,9 @@
 </script>
 </head>
   <body class="bg-gray-50">
+    <div id="supabase-warning" style="display: none; position: fixed; top: 0; left: 0; right: 0; background-color: #f8d7da; color: #721c24; padding: 1rem; text-align: center; font-family: sans-serif; z-index: 9999; border-bottom: 1px solid #f5c6cb;">
+      <strong>Configuración Requerida:</strong> La aplicación no puede conectarse a la base de datos. Por favor, edita el archivo <code>services/supabaseClient.ts</code> y reemplaza los valores de ejemplo con tus credenciales reales de Supabase.
+    </div>
     <div id="root"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/index.tsx"></script>
