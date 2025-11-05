@@ -5,7 +5,7 @@ import LoadingSpinner from './LoadingSpinner';
 interface ConfirmationFormProps {
   date: Date;
   time: string;
-  onConfirm: (name: string, phone: string) => void;
+  onConfirm: (name: string, phone: string, notes: string) => void;
   isBooking: boolean;
   onBack: () => void;
 }
@@ -13,6 +13,7 @@ interface ConfirmationFormProps {
 const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfirm, isBooking, onBack }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   
   const formattedDate = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(date);
@@ -20,11 +21,11 @@ const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim()) {
-      setError('Por favor, complete todos los campos.');
+      setError('Por favor, complete los campos obligatorios.');
       return;
     }
     setError('');
-    onConfirm(name, phone);
+    onConfirm(name, phone, notes);
   };
 
   return (
@@ -44,26 +45,40 @@ const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfi
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nombre Completo</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nombre Completo <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
               placeholder="Ej: Juan Pérez"
               disabled={isBooking}
+              required
             />
           </div>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Teléfono de Contacto</label>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Teléfono de Contacto <span className="text-red-500">*</span></label>
             <input
               type="tel"
               id="phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
               placeholder="Ej: 1122334455"
+              disabled={isBooking}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notas Adicionales (Opcional)</label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+              placeholder="Ej: El timbre no funciona, por favor llamar al llegar."
               disabled={isBooking}
             />
           </div>

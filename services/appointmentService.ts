@@ -1,4 +1,5 @@
-import { AppointmentDetails } from '../types';
+
+import { AppointmentDetails, BookedAppointment } from '../types';
 import { supabase } from './supabaseClient';
 
 /**
@@ -25,6 +26,7 @@ export const saveAppointment = async (appointmentData: AppointmentDetails): Prom
         nombre_cliente: appointmentData.customerName,
         telefono_cliente: appointmentData.customerPhone,
         horario_texto: appointmentData.time,
+        notas_cliente: appointmentData.customerNotes,
       },
     ])
     .select();
@@ -37,4 +39,51 @@ export const saveAppointment = async (appointmentData: AppointmentDetails): Prom
 
   console.log("Turno guardado exitosamente en Supabase:", data);
   return true;
+};
+
+/**
+ * Obtiene los horarios de los turnos ya agendados para una fecha específica.
+ *
+ * @param {Date} date - La fecha para la cual se quieren obtener los turnos.
+ * @returns {Promise<string[]>} - Una promesa que resuelve a un array de strings con los horarios ocupados.
+ */
+export const getAppointmentsForDate = async (date: Date): Promise<string[]> => {
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+
+  const { data, error } = await supabase
+    .from('turnos')
+    .select('horario_texto')
+    .gte('fecha_hora', startDate.toISOString())
+    .lte('fecha_hora', endDate.toISOString());
+
+  if (error) {
+    console.error('Error al obtener los turnos para la fecha:', error);
+    return [];
+  }
+
+  return data.map(turno => turno.horario_texto);
+};
+
+
+/**
+ * Obtiene todos los turnos agendados.
+ *
+ * @returns {Promise<BookedAppointment[]>} - Una promesa que resuelve a un array con todos los turnos.
+ */
+export const getAllAppointments = async (): Promise<BookedAppointment[]> => {
+  const { data, error } = await supabase
+    .from('turnos')
+    .select('*')
+    .order('fecha_hora', { ascending: true });
+
+  if (error) {
+    console.error('Error al obtener todos los turnos:', error);
+    throw new Error('No se pudieron cargar los turnos.');
+  }
+
+  return data as BookedAppointment[];
 };

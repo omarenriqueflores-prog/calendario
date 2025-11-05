@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { MONTH_NAMES_ES, DAY_NAMES_ES, getMockUnavailableDays } from '../constants';
 
@@ -33,17 +32,19 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate }) => {
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const isPast = dayDate < today;
+      const isUnbookable = dayDate <= today; // No se puede agendar en el día actual o en días pasados
       const isUnavailable = unavailableDays.has(day);
       const isSelected = selectedDate?.toDateString() === dayDate.toDateString();
       const isToday = today.toDateString() === dayDate.toDateString();
 
       let buttonClasses = "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ";
-      if (isPast || isUnavailable) {
+      if (isUnbookable || isUnavailable) {
         buttonClasses += "text-gray-300 cursor-not-allowed line-through";
       } else if (isSelected) {
         buttonClasses += "bg-blue-600 text-white font-bold shadow-md";
       } else if (isToday) {
+        // Este estilo solo se aplicaría si `isToday` fuera agendable, lo cual ya no es el caso.
+        // Se mantiene por si la lógica cambia en el futuro.
         buttonClasses += "bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200";
       } else {
         buttonClasses += "text-gray-700 hover:bg-gray-100";
@@ -53,7 +54,7 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate }) => {
         <div key={day} className="flex justify-center items-center">
           <button
             onClick={() => onDateSelect(dayDate)}
-            disabled={isPast || isUnavailable}
+            disabled={isUnbookable || isUnavailable}
             className={buttonClasses}
           >
             {day}
