@@ -1,4 +1,3 @@
-
 import { AppointmentDetails, BookedAppointment } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -86,4 +85,28 @@ export const getAllAppointments = async (): Promise<BookedAppointment[]> => {
   }
 
   return data as BookedAppointment[];
+};
+
+/**
+ * Elimina un turno de la base de datos por su ID.
+ *
+ * @param {number} id - El ID del turno a eliminar.
+ * @returns {Promise<boolean>} - Resuelve a `true` si fue exitoso.
+ * @throws {Error} - Lanza un error si falla la eliminación.
+ */
+export const deleteAppointment = async (id: number): Promise<boolean> => {
+  console.log(`Intentando eliminar el turno con ID: ${id}`);
+
+  const { error } = await supabase
+    .from('turnos')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error al eliminar el turno en Supabase:', error);
+    throw new Error(`Error de Supabase: ${error.message}`);
+  }
+
+  console.log(`Turno con ID ${id} eliminado exitosamente.`);
+  return true;
 };
