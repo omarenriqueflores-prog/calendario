@@ -60,7 +60,7 @@ export default function App() {
         setSelectedTime(time);
     }, []);
 
-    const handleBookingConfirm = async (customerName: string, customerPhone: string, notes: string) => {
+    const handleBookingConfirm = async (customerName: string, customerPhone: string, notes: string, latitude?: number, longitude?: number) => {
         if (!selectedDate || !selectedTime) return;
 
         setIsBooking(true);
@@ -72,6 +72,8 @@ export default function App() {
             customerName,
             customerPhone,
             customerNotes: notes,
+            latitude,
+            longitude,
         };
 
         try {
@@ -88,14 +90,10 @@ export default function App() {
         }
     };
     
-    const handleNewAppointment = () => {
-        resetBookingState();
-    };
-
     const renderCustomerView = () => (
         <>
             {appointmentDetails ? (
-                <SuccessMessage details={appointmentDetails} onReset={handleNewAppointment} />
+                <SuccessMessage details={appointmentDetails} />
             ) : (
                 <>
                     {/* Mobile-only placeholder */}

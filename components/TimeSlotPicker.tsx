@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getAvailableTimeSlotsForDate } from '../constants';
 import { getAppointmentsForDate } from '../services/appointmentService';
@@ -54,15 +53,22 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ selectedDate, onTimeSel
       .channel('turnos-db-changes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'turnos' },
+        { event: '*', schema: 'public', table: 'turnos' },
         (payload) => {
-          const newAppointment = payload.new as BookedAppointment;
-          const appointmentDate = new Date(newAppointment.fecha_hora);
+          const record = (payload.new || payload.old) as BookedAppointment;
+          const appointmentDate = new Date(record.fecha_hora);
 
           // Comprobar si el nuevo turno corresponde a la fecha seleccionada
           if (appointmentDate.toDateString() === selectedDate.toDateString()) {
-            // Actualizar el estado para reflejar el turno recién ocupado
-            setBookedSlots(prevSlots => new Set([...prevSlots, newAppointment.horario_texto]));
+            if (payload.eventType === 'INSERT') {
+              setBookedSlots(prevSlots => new Set([...prevSlots, record.horario_texto]));
+            } else if (payload.eventType === 'DELETE') {
+              setBookedSlots(prevSlots => {
+                const newBookedSlots = new Set(prevSlots);
+                newBookedSlots.delete(record.horario_texto);
+                return newBookedSlots;
+              });
+            }
           }
         }
       )

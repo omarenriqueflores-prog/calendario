@@ -4,10 +4,9 @@ import { AppointmentDetails } from '../types';
 
 interface SuccessMessageProps {
   details: AppointmentDetails;
-  onReset: () => void;
 }
 
-const SuccessMessage: React.FC<SuccessMessageProps> = ({ details, onReset }) => {
+const SuccessMessage: React.FC<SuccessMessageProps> = ({ details }) => {
   const formattedDate = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(details.date);
 
   return (
@@ -41,12 +40,6 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({ details, onReset }) => 
         También recibirá un recordatorio por WhatsApp un día antes de su cita.
       </p>
       
-      <button
-        onClick={onReset}
-        className="mt-8 px-8 py-3 text-base font-semibold text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
-      >
-        Agendar otro turno
-      </button>
     </div>
   );
 };
