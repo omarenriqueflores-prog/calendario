@@ -27,8 +27,6 @@ export const saveAppointment = async (appointmentData: AppointmentDetails): Prom
         telefono_cliente: appointmentData.customerPhone,
         horario_texto: appointmentData.time,
         notas_cliente: appointmentData.customerNotes,
-        latitud: appointmentData.latitude,
-        longitud: appointmentData.longitude,
       },
     ])
     .select();

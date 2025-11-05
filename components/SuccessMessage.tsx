@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppointmentDetails } from '../types';
 
@@ -18,7 +17,7 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({ details }) => {
       </div>
       <h2 className="text-2xl md:text-3xl font-bold text-gray-800">¡Turno confirmado!</h2>
       <p className="text-gray-600 mt-2">Gracias, {details.customerName}. Hemos agendado su turno exitosamente.</p>
-      <p className="text-gray-600 mt-1">Hemos enviado una confirmación a su WhatsApp.</p>
+      <p className="text-gray-600 mt-1">24 horas antes le avisaremos por WhatsApp.</p>
 
       <div className="mt-8 text-left max-w-md mx-auto bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-3">
         <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">Detalles del Turno</h3>
@@ -35,11 +34,6 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({ details }) => {
             <span className="font-semibold text-gray-900">{details.customerPhone}</span>
         </div>
       </div>
-
-      <p className="text-sm text-gray-500 mt-6">
-        También recibirá un recordatorio por WhatsApp un día antes de su cita.
-      </p>
-      
     </div>
   );
 };

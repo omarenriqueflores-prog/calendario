@@ -1,76 +1,21 @@
-
 import React, { useState } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 
 interface ConfirmationFormProps {
   date: Date;
   time: string;
-  onConfirm: (name: string, phone: string, notes: string, latitude?: number, longitude?: number) => void;
+  onConfirm: (name: string, phone: string, notes: string) => void;
   isBooking: boolean;
   onBack: () => void;
 }
-
-const LocationIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-    </svg>
-);
-
 
 const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfirm, isBooking, onBack }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
-  const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
-  const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [locationError, setLocationError] = useState<string | null>(null);
   
   const formattedDate = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(date);
-
-  const handleGetLocation = () => {
-      if (!navigator.geolocation) {
-          setLocationStatus('error');
-          setLocationError("La geolocalización no es soportada por este navegador.");
-          console.error("La geolocalización no es soportada por este navegador.");
-          return;
-      }
-
-      setLocationStatus('loading');
-      setLocationError(null);
-      navigator.geolocation.getCurrentPosition(
-          (position) => {
-              setLocation({
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-              });
-              setLocationStatus('success');
-          },
-          (err) => {
-              console.error("Error al obtener la ubicación:", err);
-              setLocationStatus('error');
-              switch (err.code) {
-                  case err.PERMISSION_DENIED:
-                      setLocationError("Permiso denegado. Por favor, active el acceso a la ubicación en los ajustes de su navegador.");
-                      break;
-                  case err.POSITION_UNAVAILABLE:
-                      setLocationError("La información de ubicación no está disponible. Verifique la señal GPS o de red.");
-                      break;
-                  case err.TIMEOUT:
-                      setLocationError("La solicitud de ubicación tardó demasiado. Por favor, intente de nuevo.");
-                      break;
-                  default:
-                      setLocationError("Ocurrió un error desconocido al obtener la ubicación.");
-                      break;
-              }
-          },
-          {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0
-          }
-      );
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +24,7 @@ const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfi
       return;
     }
     setError('');
-    onConfirm(name, phone, notes, location?.latitude, location?.longitude);
+    onConfirm(name, phone, notes);
   };
 
   return (
@@ -126,26 +71,6 @@ const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Ubicación para la Instalación (Opcional)</label>
-            <button
-                type="button"
-                onClick={handleGetLocation}
-                disabled={isBooking || locationStatus === 'loading'}
-                className="mt-1 w-full flex items-center justify-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-100 border border-transparent rounded-lg hover:bg-blue-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
-                >
-                <LocationIcon />
-                {locationStatus === 'loading' ? 'Obteniendo...' : 'Capturar mi ubicación actual'}
-            </button>
-            {locationStatus === 'success' && location && (
-                <p className="text-xs text-green-600 text-center mt-1">
-                ¡Ubicación capturada con éxito!
-                </p>
-            )}
-            {locationStatus === 'error' && locationError && <p className="text-xs text-red-500 text-center mt-1">{locationError}</p>}
-             <p className="text-xs text-gray-500 text-center mt-1">Esto ayudará al técnico a encontrar su domicilio más fácilmente.</p>
-          </div>
-
-          <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notas Adicionales (Opcional)</label>
             <textarea
               id="notes"
@@ -159,7 +84,7 @@ const ConfirmationForm: React.FC<ConfirmationFormProps> = ({ date, time, onConfi
           </div>
           {error && <p className="text-red-500 text-xs text-center">{error}</p>}
            <p className="text-xs text-gray-500 text-center pt-2">
-            Al confirmar, recibirás un mensaje de WhatsApp con los detalles de tu turno.
+            Le enviaremos un recordatorio por WhatsApp 24 horas antes de su turno.
            </p>
         </form>
       </div>

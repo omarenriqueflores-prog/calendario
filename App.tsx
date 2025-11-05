@@ -60,7 +60,7 @@ export default function App() {
         setSelectedTime(time);
     }, []);
 
-    const handleBookingConfirm = async (customerName: string, customerPhone: string, notes: string, latitude?: number, longitude?: number) => {
+    const handleBookingConfirm = async (customerName: string, customerPhone: string, notes: string) => {
         if (!selectedDate || !selectedTime) return;
 
         setIsBooking(true);
@@ -72,8 +72,6 @@ export default function App() {
             customerName,
             customerPhone,
             customerNotes: notes,
-            latitude,
-            longitude,
         };
 
         try {

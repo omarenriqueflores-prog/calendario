@@ -5,8 +5,6 @@ export interface AppointmentDetails {
   customerName: string;
   customerPhone: string;
   customerNotes?: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 export interface BookedAppointment {
@@ -16,6 +14,4 @@ export interface BookedAppointment {
   telefono_cliente: string;
   horario_texto: string;
   notas_cliente?: string;
-  latitud?: number;
-  longitud?: number;
 }
