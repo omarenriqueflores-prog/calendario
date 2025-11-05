@@ -1,0 +1,5 @@
+{
+  "name": "Sistema de Turnos para Instalaciones",
+  "description": "Una aplicación web para que los clientes puedan agendar fácilmente un turno para la instalación de servicios de TV por cable e internet. El cliente selecciona un día y horario disponible desde un calendario intuitivo.",
+  "requestFramePermissions": []
+}
