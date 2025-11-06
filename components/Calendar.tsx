@@ -1,18 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { MONTH_NAMES_ES, DAY_NAMES_ES, getMockUnavailableDays } from '../constants';
+import { BookedAppointment } from '../types';
 
 interface CalendarProps {
   onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
+  appointments?: BookedAppointment[];
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate }) => {
+const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, appointments = [] }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const unavailableDays = useMemo(() => getMockUnavailableDays(currentDate.getFullYear(), currentDate.getMonth()), [currentDate]);
+
+  const bookedDays = useMemo(() => {
+    const dates = new Set<string>();
+    appointments.forEach(app => {
+      // Usar toDateString para normalizar la fecha y evitar problemas de zona horaria
+      dates.add(new Date(app.fecha_hora).toDateString());
+    });
+    return dates;
+  }, [appointments]);
 
   const changeMonth = (offset: number) => {
     setCurrentDate(prevDate => {
@@ -36,8 +47,9 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate }) => {
       const isUnavailable = unavailableDays.has(day);
       const isSelected = selectedDate?.toDateString() === dayDate.toDateString();
       const isToday = today.toDateString() === dayDate.toDateString();
+      const hasAppointment = bookedDays.has(dayDate.toDateString());
 
-      let buttonClasses = "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ";
+      let buttonClasses = "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 relative ";
       if (isUnbookable || isUnavailable) {
         buttonClasses += "text-gray-300 cursor-not-allowed line-through";
       } else if (isSelected) {
@@ -58,6 +70,9 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate }) => {
             className={buttonClasses}
           >
             {day}
+            {hasAppointment && (
+                <span className={`absolute bottom-1.5 h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500'}`}></span>
+            )}
           </button>
         </div>
       );

@@ -1,6 +1,8 @@
 import { AppointmentDetails, BookedAppointment } from '../types';
 import { supabase } from './supabaseClient';
 
+const RLS_ERROR_MESSAGE = 'violates row-level security policy';
+
 /**
  * Guarda un turno en la base de datos de Supabase.
  *
@@ -11,14 +13,12 @@ import { supabase } from './supabaseClient';
 export const saveAppointment = async (appointmentData: AppointmentDetails): Promise<boolean> => {
   console.log("Guardando turno en Supabase:", appointmentData);
 
-  // Combina la fecha y la hora para crear un objeto Date completo
   const appointmentDateTime = new Date(appointmentData.date);
-  // Extrae la hora de inicio del string "HH:mm - HH:mm"
   const [hours, minutes] = appointmentData.time.split(' - ')[0].split(':');
   appointmentDateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
   const { data, error } = await supabase
-    .from('turnos') // Asegúrate de que tu tabla se llame 'turnos'
+    .from('turnos')
     .insert([
       {
         fecha_hora: appointmentDateTime.toISOString(),
@@ -32,7 +32,13 @@ export const saveAppointment = async (appointmentData: AppointmentDetails): Prom
 
   if (error) {
     console.error("Error al guardar el turno en Supabase:", error);
-    // Lanzamos un error para que sea capturado por el bloque try-catch en App.tsx
+    if (error.message.includes(RLS_ERROR_MESSAGE)) {
+      throw new Error(
+        'Permiso denegado al crear el turno.\n' +
+        'Esto significa que la tabla "turnos" no tiene una Política (Policy) que permita la operación de CREACIÓN (INSERT).\n' +
+        'Por favor, ve a la sección "Authentication" -> "Policies" de tu proyecto en Supabase y crea una política para ello.'
+      );
+    }
     throw new Error(`Error de Supabase: ${error.message}`);
   }
 
@@ -61,7 +67,14 @@ export const getAppointmentsForDate = async (date: Date): Promise<string[]> => {
 
   if (error) {
     console.error('Error al obtener los turnos para la fecha:', error);
-    return [];
+    if (error.message.includes(RLS_ERROR_MESSAGE)) {
+      throw new Error(
+        'Permiso denegado al leer los horarios.\n' +
+        'Esto significa que la tabla "turnos" no tiene una Política (Policy) que permita la operación de LECTURA (SELECT).\n' +
+        'Por favor, ve a la sección "Authentication" -> "Policies" de tu proyecto en Supabase y crea una política para ello.'
+      );
+    }
+    throw new Error(`Error de Supabase: ${error.message}`);
   }
 
   return data.map(turno => turno.horario_texto);
@@ -81,41 +94,15 @@ export const getAllAppointments = async (): Promise<BookedAppointment[]> => {
 
   if (error) {
     console.error('Error al obtener todos los turnos:', error);
+     if (error.message.includes(RLS_ERROR_MESSAGE)) {
+      throw new Error(
+        'Permiso denegado al cargar los turnos.\n' +
+        'Esto significa que la tabla "turnos" no tiene una Política (Policy) que permita la operación de LECTURA (SELECT).\n' +
+        'Por favor, ve a la sección "Authentication" -> "Policies" de tu proyecto en Supabase y crea una política para ello.'
+      );
+    }
     throw new Error('No se pudieron cargar los turnos.');
   }
 
   return data as BookedAppointment[];
-};
-
-/**
- * Elimina un turno de la base de datos por su ID.
- *
- * @param {number} id - El ID del turno a eliminar.
- * @returns {Promise<boolean>} - Resuelve a `true` si fue exitoso.
- * @throws {Error} - Lanza un error si falla la eliminación.
- */
-export const deleteAppointment = async (id: number): Promise<boolean> => {
-  console.log(`Intentando eliminar el turno con ID: ${id}`);
-
-  const { data, error } = await supabase
-    .from('turnos')
-    .delete()
-    .eq('id', id)
-    .select(); // Pide a Supabase que devuelva la fila eliminada
-
-  if (error) {
-    console.error('Error al eliminar el turno en Supabase:', error);
-    throw new Error(`Error de base de datos: ${error.message}`);
-  }
-
-  // Si 'data' está vacío, significa que no se eliminó ninguna fila.
-  // Esto es casi siempre un problema de permisos con Row Level Security (RLS).
-  if (!data || data.length === 0) {
-      console.warn(`No se eliminó ningún turno con ID ${id}. Causa probable: Políticas de Seguridad (RLS).`);
-      // Lanza un error muy específico para que el usuario pueda diagnosticar el problema en su configuración de Supabase.
-      throw new Error('La eliminación falló. Causa probable: Políticas de Seguridad (RLS) en Supabase. Asegúrese de que su tabla "turnos" tenga una política que permita la operación "DELETE".');
-  }
-
-  console.log(`Turno con ID ${id} eliminado exitosamente.`);
-  return true;
 };
