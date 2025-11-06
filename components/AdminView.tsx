@@ -10,10 +10,12 @@ const AdminView: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchAppointments = async () => {
             setIsLoading(true);
+            setError(null);
             try {
                 const data = await getAllAppointments();
                 setAppointments(data);
@@ -32,6 +34,7 @@ const AdminView: React.FC = () => {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'turnos' },
                 (payload) => {
+                    console.log('Realtime event received:', payload);
                     if (payload.eventType === 'INSERT') {
                         setAppointments(currentAppointments => 
                             [...currentAppointments, payload.new as BookedAppointment]
@@ -61,14 +64,18 @@ const AdminView: React.FC = () => {
 
     const handleDeleteAppointment = async (id: number) => {
         if (window.confirm('¿Está seguro de que desea eliminar este turno? Esta acción no se puede deshacer.')) {
+            setDeletingId(id);
+
             try {
                 await deleteAppointment(id);
-                // La UI se actualizará automáticamente gracias a la suscripción en tiempo real de Supabase.
-                // Para una respuesta más inmediata, se podría filtrar el estado aquí:
-                // setAppointments(prev => prev.filter(app => app.id !== id));
-            } catch (error) {
-                console.error('Error al eliminar el turno:', error);
-                setError('No se pudo eliminar el turno. Inténtelo de nuevo.');
+                // El éxito es manejado por la suscripción en tiempo real.
+            } catch (err: any) {
+                console.error('Error al eliminar el turno:', err);
+                // Usamos un alert() para que el mensaje sea imposible de ignorar.
+                // Esto es crucial para diagnosticar problemas de RLS.
+                window.alert(err.message || 'No se pudo eliminar el turno. Inténtelo de nuevo.');
+            } finally {
+                setDeletingId(null);
             }
         }
     };
@@ -81,19 +88,21 @@ const AdminView: React.FC = () => {
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-20">
-                <LoadingSpinner />
+                <LoadingSpinner className="text-blue-600" />
                 <span className="ml-3 text-gray-600">Cargando turnos...</span>
             </div>
         );
     }
     
-    if (error) {
-        return <p className="text-red-500 text-center mt-4">{error}</p>;
-    }
-    
     return (
         <div>
              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Panel de Administración</h2>
+             {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong className="font-bold">Error de Carga: </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+             )}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                      <h3 className="text-xl font-semibold text-gray-700 mb-4">Calendario de Turnos</h3>
@@ -117,9 +126,14 @@ const AdminView: React.FC = () => {
                                         <div className="mt-3 pt-3 border-t border-blue-200">
                                             <button
                                                 onClick={() => handleDeleteAppointment(app.id)}
-                                                className="w-full text-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
+                                                disabled={deletingId === app.id}
+                                                className="w-full flex items-center justify-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Eliminar Turno
+                                                {deletingId === app.id ? (
+                                                    <LoadingSpinner className="text-red-700" />
+                                                ) : (
+                                                    'Eliminar Turno'
+                                                )}
                                             </button>
                                         </div>
                                     </li>

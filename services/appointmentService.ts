@@ -97,14 +97,23 @@ export const getAllAppointments = async (): Promise<BookedAppointment[]> => {
 export const deleteAppointment = async (id: number): Promise<boolean> => {
   console.log(`Intentando eliminar el turno con ID: ${id}`);
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('turnos')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select(); // Pide a Supabase que devuelva la fila eliminada
 
   if (error) {
     console.error('Error al eliminar el turno en Supabase:', error);
-    throw new Error(`Error de Supabase: ${error.message}`);
+    throw new Error(`Error de base de datos: ${error.message}`);
+  }
+
+  // Si 'data' está vacío, significa que no se eliminó ninguna fila.
+  // Esto es casi siempre un problema de permisos con Row Level Security (RLS).
+  if (!data || data.length === 0) {
+      console.warn(`No se eliminó ningún turno con ID ${id}. Causa probable: Políticas de Seguridad (RLS).`);
+      // Lanza un error muy específico para que el usuario pueda diagnosticar el problema en su configuración de Supabase.
+      throw new Error('La eliminación falló. Causa probable: Políticas de Seguridad (RLS) en Supabase. Asegúrese de que su tabla "turnos" tenga una política que permita la operación "DELETE".');
   }
 
   console.log(`Turno con ID ${id} eliminado exitosamente.`);
